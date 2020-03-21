@@ -87,13 +87,16 @@ public:
     reference front() {return *begin();}
     reference back() {return *(end()-1);}
 
-    void push_back(const T& x) {
-        if (finish != end_of_storage) {
-            std::allocator<T>().construct(finish, x);
-            ++finish;
-        } else
-            inset_axu(end(), x);
+void push_back(const T& x) {
+    //拥有预留空间
+    if (finish != end_of_storage) {
+        std::allocator<T>().construct(finish, x);
+        ++finish;
     }
+    //没有预留空间
+    else
+        inset_axu(end(), x);
+}
     void pop_back() {
         --finish;
         std::allocator<T>().destroy(finish);
@@ -129,7 +132,8 @@ public:
 
 template<typename T>
 void Vector<T>::inset_axu(Vector::iterator position, const T &x) {
-    if (finish != end_of_storage) {                                                      //Vector拥有备用空间
+    //Vector拥有备用空间
+    if (finish != end_of_storage) {
         std::allocator<T>().construct(finish, *(finish-1));
         ++finish;
         T x_copy = x;
@@ -137,17 +141,24 @@ void Vector<T>::inset_axu(Vector::iterator position, const T &x) {
         *position = x_copy;
 
     }
-    else {                                                                               //Vector没有备用空间
+    //Vector没有备用空间
+    else {
         const size_type old_size = size();
+        //当原来空间大小不为零时分配原来空间大小二倍的空间
         const size_type len = old_size == 0 ? 1 : 2 * old_size;
         iterator new_start = std::allocator<T>().allocate(len);
         iterator new_finish = new_start;
         try {
+            //将原vector插入位置之前的内容拷贝到新vector
             new_finish = std::uninitialized_copy(start, position, new_start);
+            //在新配置空间的finish位置设定要插入的对象
             std::allocator<T>().construct(new_finish, x);
+            //更新新finish指向的位置
             ++new_finish;
+            //将原vector插入位置之后的内容拷贝到新vector
             new_finish = std::uninitialized_copy(position, finish, new_finish);
         }
+        //若分配新空间时出现异常，则析构并释放新空间
         catch(...) {
             auto iter = new_start;
             for (; iter != new_finish; ++iter)
@@ -160,6 +171,7 @@ void Vector<T>::inset_axu(Vector::iterator position, const T &x) {
         for (; iter != end(); ++iter)
             std::allocator<T>().destroy(iter);
         deallocate();
+        //调整迭代器
         start = new_start;
         finish = new_finish;
         end_of_storage = new_finish + len;
