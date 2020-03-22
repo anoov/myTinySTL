@@ -1,14 +1,16 @@
 #include <iostream>
 #include "myVector.h"
+#include "myList.h"
 using namespace std;
 int main() {
-    Vector<int> a(10, 1);
-//    a.pop_back();
-//    cout << a.capacity() << endl;
-    a.push_back(20);
-    cout << a.empty() << endl;
+    myList<int> a;
+    a.push_back(1);
+    a.push_back(2);
+    a.push_back(3);
+    a.push_back(4);
     auto iter = a.begin();
-    for (; iter != a.end(); ++iter)
+    for (; iter != a.end(); ++iter) {
         cout << *iter << endl;
+    }
     return 0;
 }
