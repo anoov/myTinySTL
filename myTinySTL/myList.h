@@ -102,7 +102,7 @@ protected:
         return p;
     }
     //析构并释放一个节点
-    void destroy(link_type p) {
+    void destroy_node(link_type p) {
         std::allocator<T>().destroy(&p->data);
         put_node(p);
     }
@@ -127,11 +127,129 @@ public:
         return p;
     }
 
+    void push_front(const T& x) {
+        insert(begin(), x);
+    }
+
     void push_back(const T& x) {
         insert(end(), x);
     }
 
+    iterator erase(iterator position) {
+        link_type next_node = position.node->next;
+        link_type prev_node = position.node->prev;
+        prev_node->next = next_node;
+        next_node->prev = prev_node;
+        destroy_node(position.node);
+        return iterator(next_node);
+    }
+
+    void pop_front() {erase(begin());}
+    void pop_back() {auto tmp = end(); erase(--tmp);}
+
+    void clear();
+    void remove(const T& value);                        //删除值为value的所有节点
+    void unique();
+
+    void splice(iterator position, myList &x) {
+        if (! x.empty()) transfer(position, x.begin(), x.end());
+    }
+    void splice(iterator position, myList&, iterator i) {
+        iterator j = i;
+        ++j;
+        if (position == i || position == j) return;
+        transfer(position, i, j);
+    }
+    void splice(iterator position, myList&, iterator first, iterator last) {
+        if (first != last) transfer(position, first, last);
+    }
+
+    //将x合并到*this身上，两个lists的元素都必须先经过递增排序
+    void merge(myList &x);
+
+    void reverse();
+
 protected:
+    void transfer(iterator position, iterator first, iterator last);
 };
+
+
+template<typename T>
+void myList<T>::clear() {
+    auto cur = (link_type) node->next;     //begin()
+    while (cur != node) {
+        link_type tmp = cur;
+        cur = cur->next;
+        destroy_node(tmp);
+    }
+    node->next = node;
+    node->prev = node;
+}
+
+template<typename T>
+void myList<T>::remove(const T &value) {
+    iterator cur = begin();
+    while (cur != end()) {
+        auto next = cur;
+        next++;
+        if (cur.node->data == value) erase(cur);
+        cur = next;
+    }
+}
+
+template<typename T>
+void myList<T>::unique() {
+    iterator first = begin();
+    iterator last = end();
+    if (first == last) return;
+    iterator next = first;
+    while (++next != last) {
+        if (*first == *next)
+            erase(next);
+        else
+            first = next;
+        next = first;
+    }
+}
+
+template<typename T>
+void myList<T>::transfer(myList::iterator position, myList::iterator first, myList::iterator last) {
+    last.node->prev->next = position.node;
+    first.node->prev->next = last.node;
+    position.node->prev->next = first.node;
+    auto tmp = position.node->prev;
+    position.node->prev = last.node->prev;
+    last.node->prev = first.node->prev;
+    first.node->prev = tmp;
+}
+
+template<typename T>
+void myList<T>::merge(myList &x) {
+    iterator first1 = begin();
+    iterator last1 = end();
+    iterator first2 = x.begin();
+    iterator last2 = x.end();
+    while (first1 != last1 && first2 != last2) {
+        if (*first2 < *first1) {
+            iterator next = first2;
+            transfer(first1, first2, ++next);
+            first2 = next;
+        } else
+            first1++;
+        if (first2 != last2) transfer(last1, first2, last2);
+    }
+}
+
+template<typename T>
+void myList<T>::reverse() {
+    if (node->next == node || link_type(node->next)->next == node) return;
+    iterator first = begin();
+    ++first;
+    while (first != end()) {
+        iterator old = first;
+        ++first;
+        transfer(begin(), old, first);
+    }
+}
 
 #endif //MYTINYSTL_MYLIST_H
