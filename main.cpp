@@ -8,6 +8,7 @@ int main() {
     a.push_back(2);
     a.push_back(3);
     a.push_back(4);
+    a.pop_back();
     auto iter = a.begin();
     for (; iter != a.end(); ++iter) {
         cout << *iter << endl;
