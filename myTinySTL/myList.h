@@ -90,10 +90,15 @@ public:
 protected:
     //配置一个节点并传回
     link_type get_node() {
-        return new list_node;
+        return std::allocator<list_node>().allocate(1);
+//        return new list_node;
+
     }
     //释放一个节点
-    void put_node(link_type p) {delete p;}
+    void put_node(link_type p) {
+        std::allocator<list_node>().deallocate(p, 1);
+//        delete p;
+    }
 
     //产生一个带有元素值的节点
     link_type create_node(const T& x) {
