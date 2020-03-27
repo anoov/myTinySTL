@@ -92,7 +92,6 @@ protected:
     link_type get_node() {
         return std::allocator<list_node>().allocate(1);
 //        return new list_node;
-
     }
     //释放一个节点
     void put_node(link_type p) {
